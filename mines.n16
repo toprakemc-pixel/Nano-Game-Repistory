@@ -1,0 +1,664 @@
+N16
+VERSION=1
+
+NAME=Mines
+RESOLUTION=320x240
+SCANMODE=p
+REFRESH=30
+
+REQUIRED=bmpix,ctrl
+
+ICON=iVBORw0KGgoAAAANSUhEUgAAAPAAAADwCAYAAAA+VemSAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAAYdEVYdFNvZnR3YXJlAFBhaW50Lk5FVCA1LjEuMvu8A7YAAAC2ZVhJZklJKgAIAAAABQAaAQUAAQAAAEoAAAAbAQUAAQAAAFIAAAAoAQMAAQAAAAIAAAAxAQIAEAAAAFoAAABphwQAAQAAAGoAAAAAAAAADHcBAOgDAAAMdwEA6AMAAFBhaW50Lk5FVCA1LjEuMgADAACQBwAEAAAAMDIzMAGgAwABAAAAAQAAAAWgBAABAAAAlAAAAAAAAAACAAEAAgAEAAAAUjk4AAIABwAEAAAAMDEwMAAAAADu6i0YxswAAgAAAyxJREFUeF7t3DFOwwAQRUHMxfDRl5OZ3hURkbKPzJTbP233j5m5PoCkz/sB6BAwhAkYwgQMYQKGMAFDmIAhTMAQJmAIEzCECRjCBAxhAoYwAUOYgCFMwBAmYAgTMIQJGMIOm1i7fJ3n/bTK98z9xAv5wBAmYAgTMIQJGMIEDGEChjABQ5iAIUzAECZgCBMwhAkYwgQMYQKGMAFDmIAhTMAQJmAIEzCEvd0m1vbNqe1sYu3iA0OYgCFMwBAmYAgTMIQJGMIEDGEChjABQ5iAIUzAECZgCBMwhAkYwgQMYQKGMAFDmIAhTMAQtn4Ty4bVLjaxdvGBIUzAECZgCBMwhAkYwgQMYQKGMAFDmIAhTMAQJmAIEzCECRjCBAxhAoYwAUOYgCFMwBAmYAhbv4n1bDa2/sYm1i4+MIQJGMIEDGEChjABQ5iAIUzAECZgCBMwhAkYwgQMYQKGMAFDmIAhTMAQJmAIEzCECRjCBAxhb7eJtd32zS6bWLv4wBAmYAgTMIQJGMIEDGEChjABQ5iAIUzAECZgCBMwhAkYwgQMYQKGMAFDmIAhTMAQJmAIEzCE2cT6584nb2yNTaxVfGAIEzCECRjCBAxhAoYwAUOYgCFMwBAmYAgTMIQJGMIEDGEChjABQ5iAIUzAECZgCBMwhAkYwgQMYQKGMAFDmIAhTMAQJmAIEzCECRjCBAxhAoYwAUOYgCFMwBAmYAgTMIQJGMIEDGEChjABQ5iAIeyYmet+5PfO87yfeMDM3E88wAeGMAFDmIAhTMAQJmAIEzCECRjCBAxhAoYwAUOYgCFMwBAmYAgTMIQJGMIEDGEChjABQ5iAIWz9JpbNKV5p+2aXDwxhAoYwAUOYgCFMwBAmYAgTMIQJGMIEDGEChjABQ5iAIUzAECZgCBMwhAkYwgQMYQKGMAFDmIAhTMAQJmAIEzCECRjCBAxhAoYwAUOYgCFMwBAmYAgTMIQJGMIEDGEChjABQ5iAIUzAECZgCBMwhB0zc92PQIMPDGEChjABQ5iAIUzAECZgCBMwhAkYwgQMYQKGMAFDmIAhTMAQJmAIEzCECRjCBAxhAoYwAUPYD0QdOk32BKtDAAAAAElFTkSuQmCC
+
+[PALETTE]
+
+COLOR=#000000
+COLOR=#FFFFFF
+COLOR=#808080
+COLOR=#C0C0C0
+COLOR=#0000FF
+COLOR=#FF0000
+COLOR=#00AA00
+COLOR=#FFFF00
+
+[CODE]
+
+const W = 9;
+const H = 9;
+const CELL = 20;
+
+const BX = 70;
+const BY = 25;
+
+let board = [];
+let opened = [];
+let marked = [];
+
+let cursorX = 0;
+let cursorY = 0;
+
+let status = "playing";
+
+
+function createBoard() {
+
+    board = [];
+    opened = [];
+    marked = [];
+
+
+    for (
+        let y = 0;
+        y < H;
+        y++
+    ) {
+
+        board[y] = [];
+        opened[y] = [];
+        marked[y] = [];
+
+
+        for (
+            let x = 0;
+            x < W;
+            x++
+        ) {
+
+            board[y][x] = 0;
+            opened[y][x] = false;
+            marked[y][x] = false;
+        }
+    }
+
+
+    /*
+     * 10 mayın.
+     */
+
+    const mines = [
+
+        [1, 0],
+        [5, 0],
+
+        [3, 1],
+        [7, 1],
+
+        [0, 3],
+        [4, 3],
+
+        [8, 4],
+
+        [2, 5],
+
+        [6, 6],
+
+        [3, 8]
+    ];
+
+
+    for (
+        const mine of mines
+    ) {
+
+        board[
+            mine[1]
+        ][
+            mine[0]
+        ] = -1;
+    }
+
+
+    /*
+     * Mayın sayılarını hesapla.
+     */
+
+    for (
+        let y = 0;
+        y < H;
+        y++
+    ) {
+
+        for (
+            let x = 0;
+            x < W;
+            x++
+        ) {
+
+            if (
+                board[y][x] === -1
+            ) {
+                continue;
+            }
+
+
+            let count = 0;
+
+
+            for (
+                let dy = -1;
+                dy <= 1;
+                dy++
+            ) {
+
+                for (
+                    let dx = -1;
+                    dx <= 1;
+                    dx++
+                ) {
+
+                    if (
+                        dx === 0 &&
+                        dy === 0
+                    ) {
+                        continue;
+                    }
+
+
+                    const nx =
+                        x + dx;
+
+                    const ny =
+                        y + dy;
+
+
+                    if (
+                        nx >= 0 &&
+                        nx < W &&
+                        ny >= 0 &&
+                        ny < H &&
+                        board[ny][nx] === -1
+                    ) {
+
+                        count++;
+                    }
+                }
+            }
+
+
+            board[y][x] =
+                count;
+        }
+    }
+}
+
+
+function openCell(
+    x,
+    y
+) {
+
+    if (
+        x < 0 ||
+        x >= W ||
+        y < 0 ||
+        y >= H
+    ) {
+        return;
+    }
+
+
+    if (
+        opened[y][x] ||
+        marked[y][x]
+    ) {
+        return;
+    }
+
+
+    opened[y][x] = true;
+
+
+    /*
+     * Mayın
+     */
+
+    if (
+        board[y][x] === -1
+    ) {
+
+        status = "lost";
+
+
+        /*
+         * Bütün mayınları göster.
+         */
+
+        for (
+            let yy = 0;
+            yy < H;
+            yy++
+        ) {
+
+            for (
+                let xx = 0;
+                xx < W;
+                xx++
+            ) {
+
+                if (
+                    board[yy][xx] === -1
+                ) {
+
+                    opened[yy][xx] = true;
+                }
+            }
+        }
+
+        return;
+    }
+
+
+    /*
+     * Boş hücreyse çevresini aç.
+     */
+
+    if (
+        board[y][x] === 0
+    ) {
+
+        for (
+            let dy = -1;
+            dy <= 1;
+            dy++
+        ) {
+
+            for (
+                let dx = -1;
+                dx <= 1;
+                dx++
+            ) {
+
+                if (
+                    dx !== 0 ||
+                    dy !== 0
+                ) {
+
+                    openCell(
+                        x + dx,
+                        y + dy
+                    );
+                }
+            }
+        }
+    }
+
+
+    checkWin();
+}
+
+
+function checkWin() {
+
+    for (
+        let y = 0;
+        y < H;
+        y++
+    ) {
+
+        for (
+            let x = 0;
+            x < W;
+            x++
+        ) {
+
+            if (
+                board[y][x] !== -1 &&
+                !opened[y][x]
+            ) {
+
+                return;
+            }
+        }
+    }
+
+
+    status = "won";
+}
+
+
+function toggleMark() {
+
+    if (
+        status !== "playing"
+    ) {
+        return;
+    }
+
+
+    if (
+        opened[cursorY][cursorX]
+    ) {
+        return;
+    }
+
+
+    marked[cursorY][cursorX] =
+        !marked[cursorY][cursorX];
+}
+
+
+function update() {
+
+    if (
+        status !== "playing"
+    ) {
+
+        if (
+            ctrl.pressed("START")
+        ) {
+
+            createBoard();
+
+            cursorX = 0;
+            cursorY = 0;
+
+            status = "playing";
+        }
+
+        return;
+    }
+
+
+    if (
+        ctrl.pressed("UP")
+    ) {
+
+        cursorY--;
+
+        if (
+            cursorY < 0
+        ) {
+
+            cursorY =
+                H - 1;
+        }
+    }
+
+
+    if (
+        ctrl.pressed("DOWN")
+    ) {
+
+        cursorY++;
+
+        if (
+            cursorY >= H
+        ) {
+
+            cursorY = 0;
+        }
+    }
+
+
+    if (
+        ctrl.pressed("LEFT")
+    ) {
+
+        cursorX--;
+
+        if (
+            cursorX < 0
+        ) {
+
+            cursorX =
+                W - 1;
+        }
+    }
+
+
+    if (
+        ctrl.pressed("RIGHT")
+    ) {
+
+        cursorX++;
+
+        if (
+            cursorX >= W
+        ) {
+
+            cursorX = 0;
+        }
+    }
+
+
+    if (
+        ctrl.pressed("START")
+    ) {
+
+        openCell(
+            cursorX,
+            cursorY
+        );
+    }
+
+
+    if (
+        ctrl.pressed("MARK")
+    ) {
+
+        toggleMark();
+    }
+}
+
+
+function draw() {
+
+    bmpix.clear(1);
+
+
+    /*
+     * Başlık
+     */
+
+    bmpix.text(
+        "N16 MINES",
+        10,
+        5,
+        12,
+        0
+    );
+
+
+    /*
+     * Tahta
+     */
+
+    for (
+        let y = 0;
+        y < H;
+        y++
+    ) {
+
+        for (
+            let x = 0;
+            x < W;
+            x++
+        ) {
+
+            const px =
+                BX + x * CELL;
+
+            const py =
+                BY + y * CELL;
+
+
+            /*
+             * Kapalı
+             */
+
+            if (
+                !opened[y][x]
+            ) {
+
+                bmpix.fillRect(
+                    px + 1,
+                    py + 1,
+                    CELL - 2,
+                    CELL - 2,
+                    3
+                );
+
+
+                if (
+                    marked[y][x]
+                ) {
+
+                    bmpix.text(
+                        "X",
+                        px + 6,
+                        py + 2,
+                        12,
+                        5
+                    );
+                }
+            }
+
+
+            /*
+             * Açık
+             */
+
+            else {
+
+                bmpix.fillRect(
+                    px + 1,
+                    py + 1,
+                    CELL - 2,
+                    CELL - 2,
+                    1
+                );
+
+
+                if (
+                    board[y][x] === -1
+                ) {
+
+                    bmpix.text(
+                        "*",
+                        px + 6,
+                        py + 2,
+                        12,
+                        5
+                    );
+
+                } else if (
+                    board[y][x] > 0
+                ) {
+
+                    bmpix.text(
+                        board[y][x],
+                        px + 6,
+                        py + 2,
+                        12,
+                        4
+                    );
+                }
+            }
+
+
+            /*
+             * Hücre çerçevesi
+             */
+
+            bmpix.rect(
+                px,
+                py,
+                CELL,
+                CELL,
+                0
+            );
+        }
+    }
+
+
+    /*
+     * İmleç
+     */
+
+    if (
+        status === "playing"
+    ) {
+
+        bmpix.rect(
+            BX + cursorX * CELL,
+            BY + cursorY * CELL,
+            CELL,
+            CELL,
+            4
+        );
+    }
+
+
+    /*
+     * Sonuç
+     */
+
+    if (
+        status === "lost"
+    ) {
+
+        bmpix.text(
+            "MAYIN!",
+            120,
+            215,
+            12,
+            5
+        );
+
+        bmpix.text(
+            "ENTER = YENI OYUN",
+            165,
+            215,
+            8,
+            0
+        );
+    }
+
+
+    if (
+        status === "won"
+    ) {
+
+        bmpix.text(
+            "KAZANDIN!",
+            105,
+            215,
+            12,
+            6
+        );
+
+        bmpix.text(
+            "ENTER = YENI OYUN",
+            165,
+            215,
+            8,
+            0
+        );
+    }
+}
+
+
+function gameStart() {
+
+    createBoard();
+
+    cursorX = 0;
+    cursorY = 0;
+
+    status = "playing";
+}
+
+
+function gameFrame() {
+
+    update();
+
+    draw();
+}
+
+
+window.gameStart =
+    gameStart;
+
+window.gameFrame =
+    gameFrame;
